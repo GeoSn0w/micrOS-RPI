@@ -1,0 +1,2 @@
+#define KERN_SUCCESS 0
+#define KERN_FAILURE 1
