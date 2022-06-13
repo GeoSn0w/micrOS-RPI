@@ -28,6 +28,9 @@
 
 unsigned int width, height, pitch, isrgb;   /* dimensions and channel order */
 extern unsigned char *frameBufferAddress;
+void microPrint_NewLine(void);
+int current_Y = 0;
+int current_X = 0;
 
 int micrOS_Framebuffer_Init() {
     mailbox[0] = 35*4;
@@ -93,30 +96,75 @@ void drawPixel(int x, int y, unsigned char attr) {
 }
 
 
-void drawChar(unsigned char ch, int x, int y, unsigned char attr) {
+void drawChar(unsigned char ch, int x, int y, unsigned char attr, int zoom){
     unsigned char *glyph = (unsigned char *)&font + (ch < FONT_NUMGLYPHS ? ch : 0) * FONT_BPG;
 
-    for (int i=0;i<FONT_HEIGHT;i++) {
-    for (int j=0;j<FONT_WIDTH;j++) {
-        unsigned char mask = 1 << j;
+    for (int i=1;i<=(FONT_HEIGHT*zoom);i++) {
+    for (int j=0;j<(FONT_WIDTH*zoom);j++) {
+        unsigned char mask = 1 << (j/zoom);
         unsigned char col = (*glyph & mask) ? attr & 0x0f : (attr & 0xf0) >> 4;
 
         drawPixel(x+j, y+i, col);
     }
-    glyph += FONT_BPL;
+    glyph += (i%zoom) ? 0 : FONT_BPL;
     }
 }
 
-void micrOS_WriteLine(int x, int y, char *s, unsigned char attr) {
+void micrOS_WriteLine(int x, int y, char *s, unsigned char attr, int zoom) {
     while (*s) {
        if (*s == '\r') {
-          x = 0;
-       } else if(*s == '\n') {
-          x = 0; y += FONT_HEIGHT;
-       } else {
-      drawChar(*s, x, y, attr);
-          x += FONT_WIDTH;
-       }
-       s++;
+              x = 0;
+           } else if(*s == '\n') {
+              x = 0; y += (FONT_HEIGHT*zoom);
+           } else {
+          drawChar(*s, x, y, attr, zoom);
+              x += (FONT_WIDTH*zoom);
+           }
+        s++;
     }
+}
+
+int strlen(const char *str) {
+    const char *s;
+
+    for (s = str; *s; ++s);
+    return (s - str);
+}
+
+void microPrint(char *string) {
+    if (current_X + (strlen(string) * 8)  >= 1920) {
+       current_X = 0; current_Y += 8;
+    }
+    if (current_Y + 8 >= 1080) {
+       current_Y = 0;
+    }
+    micrOS_WriteLine(current_X, current_Y, string, 0x0f, 1);
+    current_X += (strlen(string) * 8);
+
+}
+
+void microPrint_NewLine(void) {
+    current_X = 0; current_Y += 8;
+}
+
+void microPrint_Character(unsigned char b) {
+    unsigned int n;
+    int c;
+    for(c=4;c>=0;c-=4) {
+        n=(b>>c)&0xF;
+        n+=n>9?0x37:0x30;
+        microPrint((char *)&n);
+    }
+    microPrint(" ");
+}
+
+void microPrint_Hex(unsigned int d) {
+    unsigned int n;
+    int c;
+    for(c=28;c>=0;c-=4) {
+        n=(d>>c)&0xF;
+        n+=n>9?0x37:0x30;
+        microPrint((char *)&n);
+    }
+    microPrint(" ");
 }

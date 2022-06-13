@@ -24,5 +24,9 @@
  */
 
 int micrOS_Framebuffer_Init();
-void micrOS_WriteLine(int x, int y, char *s, unsigned char attr);
+void micrOS_WriteLine(int x, int y, char *s, unsigned char attr, int zoom);
+void microPrint(char *string);
+void microPrint_NewLine(void);
+void microPrint_Character(unsigned char b);
+void microPrint_Hex(unsigned int d);
 unsigned char *frameBufferAddress;

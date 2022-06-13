@@ -2,10 +2,15 @@
 #include "framebuffer.h"
 
 int initializeFrameBuffer(void);
+int micrOS_vanityPrint(void);
 
 int main(){
     initializeFrameBuffer();
-    micrOS_WriteLine(100,100,"micrOS v1.0 - Raspbery PI 3",0x0f);
+    micrOS_vanityPrint();
+    microPrint("[*] Initializing text mode printer...");
+    microPrint_NewLine();
+    microPrint("[+] Successfully intiliazed!");
+    microPrint_NewLine();
     while (1);
 }
 
@@ -15,4 +20,11 @@ int initializeFrameBuffer(){
     } else {
         return KERN_FAILURE;
     }
+}
+
+int micrOS_vanityPrint(){
+    microPrint("micrOS v1.0 - Raspbery PI 3");
+    microPrint_NewLine();
+    microPrint_NewLine();
+    return KERN_SUCCESS;
 }
