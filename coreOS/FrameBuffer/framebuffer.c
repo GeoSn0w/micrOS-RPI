@@ -28,7 +28,7 @@
 #include "framebuffer.h"
 
 unsigned int width, height, pitch, isrgb;   /* dimensions and channel order */
-extern unsigned char *frameBufferAddress;
+unsigned char *frameBufferAddress;
 void microPrint_NewLine(void);
 int current_Y = 0;
 int current_X = 0;
@@ -130,6 +130,20 @@ int strlen(const char *str) {
 
     for (s = str; *s; ++s);
     return (s - str);
+}
+
+void micrOS_PaintRectangle(int x1, int y1, int x2, int y2, unsigned char attr, int fill){
+    int y=y1;
+
+    while (y <= y2) {
+       int x=x1;
+       while (x <= x2) {
+      if ((x == x1 || x == x2) || (y == y1 || y == y2)) drawPixel(x, y, attr);
+      else if (fill) drawPixel(x, y, (attr & 0xf0) >> 4);
+          x++;
+       }
+       y++;
+    }
 }
 
 void microPrint(char *string) {

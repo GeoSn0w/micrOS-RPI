@@ -1,5 +1,6 @@
 #include "kerneltypes.h"
 #include "../coreOS/FrameBuffer/framebuffer.h"
+#include "../coreOS/WorkSpace/workspace.h"
 
 int initializeFrameBuffer(void);
 int micrOS_vanityPrint(void);
@@ -11,6 +12,7 @@ int main(){
     microPrint_NewLine();
     microPrint("[+] Successfully intiliazed!");
     microPrint_NewLine();
+    presentWorkSpaceWithParameters();
     while (1);
 }
 

@@ -31,5 +31,5 @@ void microPrint(char *string);
 void microPrint_NewLine(void);
 void microPrint_Character(unsigned char b);
 void microPrint_Hex(unsigned int d);
-
+void micrOS_PaintRectangle(int x1, int y1, int x2, int y2, unsigned char attr, int fill);
 #endif /* FRAMEBUFFER_H */

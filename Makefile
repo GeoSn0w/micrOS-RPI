@@ -22,4 +22,4 @@ clean:
 	/bin/rm kernel8.elf **/*.o **/*.img
 
 finalize:
-	/bin/rm kernel8.elf **/*.o boot.o
+	/bin/rm kernel8.elf $(shell find . -name "*.o")
