@@ -1,15 +1,26 @@
 #include "kerneltypes.h"
 #include "../coreOS/FrameBuffer/framebuffer.h"
 #include "../coreOS/WorkSpace/workspace.h"
+#include "../coreOS/GPIO/delays.h"
+#include "../coreOS/GPU/mailbox.h"
 #include "../coreStorage/coreStorage.h"
 #include "../coreStorage/coreStorage_types.h"
 #include "coreHRNG.h"
 #include "../coreOS/GPIO/gpio.h"
 
-int initializeFrameBuffer(void);
-int micrOS_vanityPrint(void);
-int initializeCoreStorage(void);
-int initializeHardwareRandomNumberGenerator(void);
+#define PM_RSTC         ((volatile unsigned int*)(MMIO_BASE+0x0010001c))
+#define PM_RSTS         ((volatile unsigned int*)(MMIO_BASE+0x00100020))
+#define PM_WDOG         ((volatile unsigned int*)(MMIO_BASE+0x00100024))
+#define PM_WDOG_MAGIC   0x5a000000
+#define PM_RSTC_FULLRST 0x00000020
+
+kern_return_t initializeFrameBuffer(void);
+kern_return_t micrOS_vanityPrint(void);
+kern_return_t initializeCoreStorage(void);
+kern_return_t initializeHardwareRandomNumberGenerator(void);
+kern_return_t kRebootDevice(void);
+kern_return_t kShutdownDevice(void);
+kern_return_t corePowerManagement(corePowerManagement_cmd powerAction);
 
 int main(){
     initializeFrameBuffer();
@@ -22,11 +33,11 @@ int main(){
     presentWorkSpaceWithParameters();
     initializeCoreStorage();
     initializeHardwareRandomNumberGenerator();
-    
+    corePowerManagement(0xff);
     while (1);
 }
 
-int initializeFrameBuffer(){
+kern_return_t initializeFrameBuffer(){
     if (micrOS_Framebuffer_Init() == 0) {
         return KERN_SUCCESS;
     } else {
@@ -34,7 +45,7 @@ int initializeFrameBuffer(){
     }
 }
 
-int initializeCoreStorage(){
+kern_return_t initializeCoreStorage(){
     microPrint("[i] Starting coreStorage Service...");
     microPrint_NewLine();
     if (coreStorage_initialize(INT_READ_RDY) == coreStorage_SUCCESS) {
@@ -50,14 +61,14 @@ int initializeCoreStorage(){
     return KERN_SUCCESS;
 }
 
-int micrOS_vanityPrint(){
+kern_return_t micrOS_vanityPrint(){
     microPrint("micrOS v1.0 - Raspbery PI 3");
     microPrint_NewLine();
     microPrint_NewLine();
     return KERN_SUCCESS;
 }
 
-int initializeHardwareRandomNumberGenerator(){
+kern_return_t initializeHardwareRandomNumberGenerator(){
     microPrint("[i] MMIO Base is at: 0x");microPrint_Hex(MMIO_BASE);
     microPrint_NewLine();
     microPrint("[i] Initializing Hardware Random Number Generator Engine...");
@@ -74,4 +85,65 @@ int initializeHardwareRandomNumberGenerator(){
         microPrint_NewLine();
         return KERN_FAILURE;
     }
+}
+
+kern_return_t corePowerManagement(corePowerManagement_cmd powerAction){
+    switch (powerAction) {
+        case 0xff :
+            kShutdownDevice();
+            break;
+            
+        case 0xfe :
+            kRebootDevice();
+            break;
+    }
+    return KERN_SUCCESS;
+}
+
+kern_return_t kShutdownDevice(){
+    unsigned long r = 0;
+        for(r=0;r<16;r++) {
+            mailbox[0]=8*4;
+            mailbox[1]=MBOX_REQUEST;
+            mailbox[2]=MBOX_TAG_SETPOWER;
+            mailbox[3]=8;
+            mailbox[4]=8;
+            mailbox[5]=(unsigned int)r;
+            mailbox[6]=0;
+            mailbox[7]=MBOX_TAG_LAST;
+            mailbox_call(MBOX_CH_PROP);
+        }
+    
+        // Power off all GPIO pins (except VCC)
+        *GPFSEL0 = 0;
+        *GPFSEL1 = 0;
+        *GPFSEL2 = 0;
+        *GPFSEL3 = 0;
+        *GPFSEL4 = 0;
+        *GPFSEL5 = 0;
+        *GPPUD = 0;
+        wait_cycles(150);
+        *GPPUDCLK0 = 0xffffffff;
+        *GPPUDCLK1 = 0xffffffff;
+        wait_cycles(150);
+        *GPPUDCLK0 = 0;
+        *GPPUDCLK1 = 0;
+
+        // power off the SoC (GPU + CPU)
+        r = *PM_RSTS;
+        r &= ~0xfffffaaa;
+        r |= 0x555;
+        *PM_RSTS = PM_WDOG_MAGIC | r;
+        *PM_WDOG = PM_WDOG_MAGIC | 10;
+        *PM_RSTC = PM_WDOG_MAGIC | PM_RSTC_FULLRST;
+    return KERN_SUCCESS;
+}
+
+kern_return_t kRebootDevice(){
+    unsigned int r;
+        r = *PM_RSTS; r &= ~0xfffffaaa;
+        *PM_RSTS = PM_WDOG_MAGIC | r;   // boot from partition 0, thus rebooting the system.
+        *PM_WDOG = PM_WDOG_MAGIC | 10;
+        *PM_RSTC = PM_WDOG_MAGIC | PM_RSTC_FULLRST;
+    return KERN_SUCCESS;
 }
