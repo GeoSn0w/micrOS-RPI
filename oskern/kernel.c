@@ -1,5 +1,5 @@
 #include "kerneltypes.h"
-#include "framebuffer.h"
+#include "../coreOS/FrameBuffer/framebuffer.h"
 
 int initializeFrameBuffer(void);
 int micrOS_vanityPrint(void);

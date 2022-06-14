@@ -1,12 +1,13 @@
-CFILES = $(wildcard *.c)
+CFILES = $(shell find . -name "*.c")
 OFILES = $(CFILES:.c=.o)
+
+all: kernel8.img
+
 LLVMPATH = /usr/local/opt/llvm/bin
-CLANGFLAGS = -Wall -O2 -I /Users/geosn0w/Desktop/Toolset/arm/usr/include/lib/libc -ffreestanding -nostdinc -nostdlib -mcpu=cortex-a53+nosimd
+CLANGFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -mcpu=cortex-a53+nosimd
 
-all: clean kernel8.img
-
-boot.o: boot.S
-	$(LLVMPATH)/clang --target=aarch64-elf $(CLANGFLAGS) -c boot.S -o boot.o
+boot.o: **/boot.S
+	$(LLVMPATH)/clang --target=aarch64-elf $(CLANGFLAGS) -c **/boot.S -o boot.o
 
 %.o: %.c
 	$(LLVMPATH)/clang --target=aarch64-elf $(CLANGFLAGS) -c $< -o $@
@@ -18,7 +19,7 @@ kernel8.img: boot.o $(OFILES)
 all: finalize
 
 clean:
-	/bin/rm kernel8.elf *.o *.img
+	/bin/rm kernel8.elf **/*.o **/*.img
 
 finalize:
-	/bin/rm kernel8.elf *.o
+	/bin/rm kernel8.elf **/*.o boot.o

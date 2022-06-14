@@ -23,8 +23,9 @@
  *
  */
 
-#include "mailbox.h"
+#include "../GPU/mailbox.h"
 #include "textmode.h"
+#include "framebuffer.h"
 
 unsigned int width, height, pitch, isrgb;   /* dimensions and channel order */
 extern unsigned char *frameBufferAddress;
