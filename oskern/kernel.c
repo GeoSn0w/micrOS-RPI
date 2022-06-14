@@ -8,6 +8,8 @@
 #include "coreHRNG.h"
 #include "../coreOS/GPIO/gpio.h"
 
+char* KERN_VER_STRING = "micrOS Kernel v1.0 ~ Tue June 14 2022 10:22 PDT / root:micrOS-RPI_CoreOS_DEVELOPMENT~arm64";
+
 #define PM_RSTC         ((volatile unsigned int*)(MMIO_BASE+0x0010001c))
 #define PM_RSTS         ((volatile unsigned int*)(MMIO_BASE+0x00100020))
 #define PM_WDOG         ((volatile unsigned int*)(MMIO_BASE+0x00100024))
@@ -22,6 +24,7 @@ kern_return_t kRebootDevice(void);
 kern_return_t kShutdownDevice(void);
 kern_return_t corePowerManagement(corePowerManagement_cmd powerAction);
 kern_return_t powerOnSelfTest(void);
+unsigned long getCurrentExceptionLevel(void);
 
 int main(){
     initializeFrameBuffer();
@@ -68,6 +71,7 @@ kern_return_t initializeCoreStorage(){
 kern_return_t micrOS_vanityPrint(){
     microPrint("micrOS v1.0 - Raspbery PI 3");
     microPrint_NewLine(); microPrint_NewLine(); microPrint_NewLine();
+    microPrint(KERN_VER_STRING); microPrint_NewLine();
     return KERN_SUCCESS;
 }
 
@@ -169,5 +173,14 @@ kern_return_t powerOnSelfTest(){
         microPrint_NewLine();
         return KERN_FAILURE;
     }
+    
+    unsigned long exceptionLvl = getCurrentExceptionLevel();
+    microPrint("[i] Current Exception Level: EL: "); microPrint_Hex((exceptionLvl>>2)&3);
     return KERN_SUCCESS;
+}
+
+unsigned long getCurrentExceptionLevel(){
+    unsigned long exceptionLevel;
+    asm volatile ("mrs %0, CurrentEL" : "=r" (exceptionLevel));
+    return exceptionLevel;
 }
