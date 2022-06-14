@@ -6,7 +6,7 @@ void *micrOS_MemoryMove (void *destinationAddr, const void *sourceAddr, unsigned
     if(!length)
         return destinationAddr;
 
-    if (realDestination>realSource && realDestination<(s+length)) {
+    if (realDestination>realSource && realDestination<(realSource+length)) {
         while(length & 3)
         {
             length--;

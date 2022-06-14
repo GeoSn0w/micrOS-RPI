@@ -1,9 +1,12 @@
 #include "kerneltypes.h"
 #include "../coreOS/FrameBuffer/framebuffer.h"
 #include "../coreOS/WorkSpace/workspace.h"
+#include "../coreStorage/coreStorage.h"
+#include "../coreStorage/coreStorage_types.h"
 
 int initializeFrameBuffer(void);
 int micrOS_vanityPrint(void);
+int initializeCoreStorage(void);
 
 int main(){
     initializeFrameBuffer();
@@ -13,6 +16,7 @@ int main(){
     microPrint("[+] Successfully intiliazed!");
     microPrint_NewLine();
     presentWorkSpaceWithParameters();
+    initializeCoreStorage();
     while (1);
 }
 
@@ -21,6 +25,21 @@ int initializeFrameBuffer(){
         return KERN_SUCCESS;
     } else {
         return KERN_FAILURE;
+    }
+}
+
+int initializeCoreStorage(){
+    microPrint("[i] Starting coreStorage Service...");
+    microPrint_NewLine();
+    if (coreStorage_initialize(INT_READ_RDY) == coreStorage_SUCCESS) {
+        microPrint("[+] Successfully initialized MicroSD Card!");
+        microPrint_NewLine();
+    } else if (coreStorage_initialize(INT_READ_RDY) == coreStorage_TIMEOUT){
+        microPrint("[!] Cannot initialize coreStorage Service. MicroSD Card access timeout.");
+        microPrint_NewLine();
+    } else if (coreStorage_initialize(INT_READ_RDY) == coreStorage_FAILURE){
+        microPrint("[!] Cannot initialize coreStorage Service. MicroSD Card access failed.");
+        microPrint_NewLine();
     }
 }
 
