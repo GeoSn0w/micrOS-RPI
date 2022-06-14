@@ -1,6 +1,6 @@
-#include "kerneltypes.h"
 #include "../coreOS/FrameBuffer/framebuffer.h"
 #include "../coreOS/WorkSpace/workspace.h"
+#include "kerneltypes.h"
 #include "../coreOS/GPIO/delays.h"
 #include "../coreOS/GPU/mailbox.h"
 #include "../coreStorage/coreStorage.h"
@@ -21,11 +21,10 @@ kern_return_t initializeHardwareRandomNumberGenerator(void);
 kern_return_t kRebootDevice(void);
 kern_return_t kShutdownDevice(void);
 kern_return_t corePowerManagement(corePowerManagement_cmd powerAction);
+kern_return_t powerOnSelfTest(void);
 
 int main(){
     initializeFrameBuffer();
-    micrOS_vanityPrint();
-   
     microPrint("[*] Initializing text mode printer...");
     microPrint_NewLine();
     microPrint("[+] Successfully intiliazed!");
@@ -33,12 +32,17 @@ int main(){
     presentWorkSpaceWithParameters();
     initializeCoreStorage();
     initializeHardwareRandomNumberGenerator();
-    corePowerManagement(0xff);
+    powerOnSelfTest();
     while (1);
 }
 
 kern_return_t initializeFrameBuffer(){
     if (micrOS_Framebuffer_Init() == 0) {
+        micrOS_vanityPrint();
+        microPrint("[*] Initializing FrameBuffer...");
+        microPrint_NewLine();
+        microPrint("[+] FrameBuffer is at Address 0x"); microPrint_Hex(frameBufferAddress);
+        microPrint_NewLine();
         return KERN_SUCCESS;
     } else {
         return KERN_FAILURE;
@@ -63,8 +67,7 @@ kern_return_t initializeCoreStorage(){
 
 kern_return_t micrOS_vanityPrint(){
     microPrint("micrOS v1.0 - Raspbery PI 3");
-    microPrint_NewLine();
-    microPrint_NewLine();
+    microPrint_NewLine(); microPrint_NewLine(); microPrint_NewLine();
     return KERN_SUCCESS;
 }
 
@@ -145,5 +148,26 @@ kern_return_t kRebootDevice(){
         *PM_RSTS = PM_WDOG_MAGIC | r;   // boot from partition 0, thus rebooting the system.
         *PM_WDOG = PM_WDOG_MAGIC | 10;
         *PM_RSTC = PM_WDOG_MAGIC | PM_RSTC_FULLRST;
+    return KERN_SUCCESS;
+}
+
+kern_return_t powerOnSelfTest(){
+    mailbox[0] = 8*4;
+    mailbox[1] = MBOX_REQUEST;
+    mailbox[2] = MBOX_TAG_GETSERIAL;
+    mailbox[3] = 8;
+    mailbox[4] = 8;
+    mailbox[5] = 0;
+    mailbox[6] = 0;
+    mailbox[7] = MBOX_TAG_LAST;
+    
+    if (mailbox_call(MBOX_CH_PROP)){
+        microPrint("[i] Board Serial Number is: "); microPrint_Hex(mailbox[6]); microPrint_Hex(mailbox[5]);
+        microPrint_NewLine();
+    } else {
+        microPrint("[!] Board Serial Number cannot be determined!");
+        microPrint_NewLine();
+        return KERN_FAILURE;
+    }
     return KERN_SUCCESS;
 }

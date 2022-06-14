@@ -43,5 +43,6 @@ extern volatile unsigned int mailbox[36];
 #define MBOX_TAG_SETPOWER       0x28001
 #define MBOX_TAG_SETCLKRATE     0x38002
 #define MBOX_TAG_LAST           0
+#define MBOX_TAG_GETSERIAL      0x10004
 
 int mailbox_call(unsigned char ch);

@@ -22,13 +22,12 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
-
+#include "framebuffer.h"
 #include "../GPU/mailbox.h"
 #include "textmode.h"
-#include "framebuffer.h"
 
 unsigned int width, height, pitch, isrgb;   /* dimensions and channel order */
-unsigned char *frameBufferAddress;
+unsigned char *frameBufferAddress = 0;
 void microPrint_NewLine(void);
 int current_Y = 0;
 int current_X = 0;
