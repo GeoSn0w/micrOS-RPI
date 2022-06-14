@@ -33,6 +33,37 @@ void microPrint_NewLine(void);
 int current_Y = 0;
 int current_X = 0;
 
+/* PC Screen Font as used by Linux Console */
+typedef struct {
+    unsigned int magic;
+    unsigned int version;
+    unsigned int headersize;
+    unsigned int flags;
+    unsigned int numglyph;
+    unsigned int bytesperglyph;
+    unsigned int height;
+    unsigned int width;
+    unsigned char glyphs;
+} __attribute__((packed)) psf_t;
+extern volatile unsigned char _binary_font_psf_start;
+
+typedef struct {
+    unsigned char  magic[4];
+    unsigned int   size;
+    unsigned char  type;
+    unsigned char  features;
+    unsigned char  width;
+    unsigned char  height;
+    unsigned char  baseline;
+    unsigned char  underline;
+    unsigned short fragments_offs;
+    unsigned int   characters_offs;
+    unsigned int   ligature_offs;
+    unsigned int   kerning_offs;
+    unsigned int   cmap_offs;
+} __attribute__((packed)) sfn_t;
+extern volatile unsigned char _binary_font_sfn_start;
+
 int micrOS_Framebuffer_Init() {
     mailbox[0] = 35*4;
     mailbox[1] = MBOX_REQUEST;
@@ -46,8 +77,8 @@ int micrOS_Framebuffer_Init() {
     mailbox[7] = 0x48004;  //set virt wh
     mailbox[8] = 8;
     mailbox[9] = 8;
-    mailbox[10] = 1024;        //FrameBufferInfo.virtual_width
-    mailbox[11] = 768;         //FrameBufferInfo.virtual_height
+    mailbox[10] = 1920;        //FrameBufferInfo.virtual_width
+    mailbox[11] = 1080;         //FrameBufferInfo.virtual_height
 
     mailbox[12] = 0x48009; //set virt offset
     mailbox[13] = 8;
@@ -148,9 +179,9 @@ void micrOS_PaintRectangle(int x1, int y1, int x2, int y2, unsigned char attr, i
 
 void microPrint(char *string) {
     if (current_X + (strlen(string) * 8)  >= 1920) {
-       current_X = 0; current_Y += 8;
+       current_X = 0; current_Y += 12;
     }
-    if (current_Y + 8 >= 1080) {
+    if (current_Y + 12 >= 1080) {
        current_Y = 0;
     }
     micrOS_WriteLine(current_X, current_Y, string, 0x0f, 1);
@@ -159,7 +190,7 @@ void microPrint(char *string) {
 }
 
 void microPrint_NewLine(void) {
-    current_X = 0; current_Y += 8;
+    current_X = 0; current_Y += 12;
 }
 
 void microPrint_Character(unsigned char b) {
@@ -182,4 +213,46 @@ void microPrint_Hex(unsigned int d) {
         microPrint((char *)&n);
     }
     microPrint(" ");
+}
+
+void micrOS_PrintToScreen(int x, int y, char *s){
+    // get our font
+    psf_t *font = (psf_t*)&_binary_font_psf_start;
+    // draw next character if it's not zero
+    while(*s) {
+        // get the offset of the glyph. Need to adjust this to support unicode table
+        unsigned char *glyph = (unsigned char*)&_binary_font_psf_start +
+         font->headersize + (*((unsigned char*)s)<font->numglyph?*s:0)*font->bytesperglyph;
+        // calculate the offset on screen
+        int offs = (y * pitch) + (x * 4);
+        // variables
+        int i,j, line,mask, bytesperline=(font->width+7)/8;
+        // handle carrige return
+        if(*s == '\r') {
+            x = 0;
+        } else
+        // new line
+        if(*s == '\n') {
+            x = 0; y += font->height;
+        } else {
+            // display a character
+            for(j=0;j<font->height;j++){
+                // display one row
+                line=offs;
+                mask=1<<(font->width-1);
+                for(i=0;i<font->width;i++){
+                    // if bit set, we use white color, otherwise black
+                    *((unsigned int*)(frameBufferAddress + line))=((int)*glyph) & mask?0xFFFFFF:0;
+                    mask>>=1;
+                    line+=4;
+                }
+                // adjust to next line
+                glyph+=bytesperline;
+                offs+=pitch;
+            }
+            x += (font->width+1);
+        }
+        // next character
+        s++;
+    }
 }

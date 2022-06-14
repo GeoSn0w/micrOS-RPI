@@ -4,6 +4,7 @@
 #include "../coreStorage/coreStorage.h"
 #include "../coreStorage/coreStorage_types.h"
 #include "coreHRNG.h"
+#include "../coreOS/GPIO/gpio.h"
 
 int initializeFrameBuffer(void);
 int micrOS_vanityPrint(void);
@@ -13,6 +14,7 @@ int initializeHardwareRandomNumberGenerator(void);
 int main(){
     initializeFrameBuffer();
     micrOS_vanityPrint();
+   
     microPrint("[*] Initializing text mode printer...");
     microPrint_NewLine();
     microPrint("[+] Successfully intiliazed!");
@@ -20,6 +22,7 @@ int main(){
     presentWorkSpaceWithParameters();
     initializeCoreStorage();
     initializeHardwareRandomNumberGenerator();
+    
     while (1);
 }
 
@@ -55,13 +58,15 @@ int micrOS_vanityPrint(){
 }
 
 int initializeHardwareRandomNumberGenerator(){
+    microPrint("[i] MMIO Base is at: 0x");microPrint_Hex(MMIO_BASE);
+    microPrint_NewLine();
     microPrint("[i] Initializing Hardware Random Number Generator Engine...");
     microPrint_NewLine();
     unsigned int testResult = kernRandomize(0,100000);
     if (testResult != 0) {
         microPrint("[+] Successfully Hardware Random Number Generator Engine.");
         microPrint_NewLine();
-        microPrint("[+] HRNG Test Result: "); microPrint_Hex(testResult);
+        microPrint("[+] HRNG Test Result: 0x"); microPrint_Hex(testResult);
         microPrint_NewLine();
         return KERN_SUCCESS;
     } else {

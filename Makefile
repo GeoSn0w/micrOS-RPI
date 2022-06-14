@@ -11,9 +11,15 @@ boot.o: **/boot.S
 
 %.o: %.c
 	$(LLVMPATH)/clang --target=aarch64-elf $(CLANGFLAGS) -c $< -o $@
+	
+font_psf.o: font.psf
+	$(LLVMPATH)/ld.lld -m aarch64elf -r -b binary -o font_psf.o font.psf
 
-kernel8.img: boot.o $(OFILES)
-	$(LLVMPATH)/ld.lld -m aarch64elf -nostdlib boot.o $(OFILES) -T link.ld -o kernel8.elf
+font_sfn.o: font.sfn
+	$(LLVMPATH)/ld.lld -m aarch64elf -r -b binary -o font_sfn.o font.sfn
+	
+kernel8.img: boot.o font_psf.o font_sfn.o $(OFILES)
+	$(LLVMPATH)/ld.lld -m aarch64elf -nostdlib boot.o font_psf.o font_sfn.o $(OFILES) -T link.ld -o kernel8.elf
 	$(LLVMPATH)/llvm-objcopy -O binary kernel8.elf kernel8.img
 
 all: finalize
