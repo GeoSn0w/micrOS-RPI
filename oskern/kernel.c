@@ -3,10 +3,12 @@
 #include "../coreOS/WorkSpace/workspace.h"
 #include "../coreStorage/coreStorage.h"
 #include "../coreStorage/coreStorage_types.h"
+#include "coreHRNG.h"
 
 int initializeFrameBuffer(void);
 int micrOS_vanityPrint(void);
 int initializeCoreStorage(void);
+int initializeHardwareRandomNumberGenerator(void);
 
 int main(){
     initializeFrameBuffer();
@@ -17,6 +19,7 @@ int main(){
     microPrint_NewLine();
     presentWorkSpaceWithParameters();
     initializeCoreStorage();
+    initializeHardwareRandomNumberGenerator();
     while (1);
 }
 
@@ -41,6 +44,7 @@ int initializeCoreStorage(){
         microPrint("[!] Cannot initialize coreStorage Service. MicroSD Card access failed.");
         microPrint_NewLine();
     }
+    return KERN_SUCCESS;
 }
 
 int micrOS_vanityPrint(){
@@ -48,4 +52,21 @@ int micrOS_vanityPrint(){
     microPrint_NewLine();
     microPrint_NewLine();
     return KERN_SUCCESS;
+}
+
+int initializeHardwareRandomNumberGenerator(){
+    microPrint("[i] Initializing Hardware Random Number Generator Engine...");
+    microPrint_NewLine();
+    unsigned int testResult = kernRandomize(0,100000);
+    if (testResult != 0) {
+        microPrint("[+] Successfully Hardware Random Number Generator Engine.");
+        microPrint_NewLine();
+        microPrint("[+] HRNG Test Result: "); microPrint_Hex(testResult);
+        microPrint_NewLine();
+        return KERN_SUCCESS;
+    } else {
+        microPrint("[!] Hardware Random Number Generator Engine failed to initialize!");
+        microPrint_NewLine();
+        return KERN_FAILURE;
+    }
 }

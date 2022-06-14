@@ -14,7 +14,7 @@ int coreStorage_initialize(unsigned int llcommand){
     }
     
     if (cnt<=0 || (r & INT_CMD_TIMEOUT) || (r & INT_DATA_TIMEOUT) ) { *EMMC_INTERRUPT=r;
-        return coreStorage_TIMOUT;
+        return coreStorage_TIMEOUT;
             
     } else if (r & INT_ERROR_MASK) {
         *EMMC_INTERRUPT=r;
