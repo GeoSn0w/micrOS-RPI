@@ -26,7 +26,7 @@
 #include "../GPU/mailbox.h"
 #include "textmode.h"
 
-unsigned int width, height, pitch, isrgb;   /* dimensions and channel order */
+unsigned int width, height, pitch, RGBMode;
 unsigned char *frameBufferAddress = 0;
 void microPrint_NewLine(void);
 int current_Y = 0;
@@ -113,7 +113,7 @@ int micrOS_Framebuffer_Init() {
         width = mailbox[5];          //get actual physical width
         height = mailbox[6];         //get actual physical height
         pitch = mailbox[33];         //get number of bytes per line
-        isrgb = mailbox[24];         //get the actual channel order
+        RGBMode = mailbox[24];         //get the actual channel order
         frameBufferAddress = (void*)((unsigned long)mailbox[28]);
         return 0;
     } else {
@@ -254,4 +254,24 @@ void micrOS_PrintToScreen(int x, int y, char *s){
         // next character
         s++;
     }
+}
+
+void devicePaintPicture(char *picture_data, unsigned int picture_width, unsigned int picture_height){
+#ifdef HEADER_PIXEL
+    int x,y;
+    unsigned char *frameBuffer = frameBufferAddress;
+    char *data = picture_data, pixel[4];
+
+    frameBuffer += (height-picture_height)/2*pitch + (width-picture_width)*2;
+    
+    for (y=0; y<picture_height; y++) {
+        for (x=0; x<picture_width; x++) {
+            HEADER_PIXEL(data, pixel);
+            *((unsigned int*)frameBuffer)=RGBMode ? *((unsigned int *)&pixel) : (unsigned int)(pixel[0]<<16 | pixel[1]<<8 | pixel[2]);
+            frameBuffer+=4;
+        }
+        frameBuffer+=pitch-picture_width*4;
+    }
+#endif
+    return;
 }

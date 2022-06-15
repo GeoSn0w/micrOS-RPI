@@ -34,5 +34,6 @@ void microPrint_Hex(unsigned int d);
 void micrOS_PaintRectangle(int x1, int y1, int x2, int y2, unsigned char attr, int fill);
 void micrOS_PrintToScreen(int x, int y, char *s);
 void lfb_proprint(int x, int y, char *s);
+void devicePaintPicture(char *picture_data, unsigned int picture_width, unsigned int picture_height);
 extern unsigned char *frameBufferAddress;
 #endif /* FRAMEBUFFER_H */
