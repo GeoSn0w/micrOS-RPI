@@ -1,3 +1,8 @@
+#define LOCAL_CONTROL   0xff800000
+#define LOCAL_PRESCALER 0xff800008
+#define OSC_FREQ        54000000
+#define MAIN_STACK      0x400000
+
 .section ".text.boot"
 
 .global _start

@@ -1,3 +1,5 @@
+#include "memoryManagement.h"
+#include "../coreOS/Common/coreCommon.h"
 #include "../coreOS/GPIO/delays.h"
 #include "../coreOS/GPIO/gpio.h"
 #include "../coreOS/FrameBuffer/framebuffer.h"
@@ -22,6 +24,12 @@
 extern volatile unsigned char _data;
 extern volatile unsigned char _end;
 
+// unsigned char *HEAP_START = &_end[0]; // End of kernel
+unsigned char *HEAP_START = (unsigned char *)0x400000; // Top of stack
+unsigned int   HEAP_SIZE  = 0x30000000; // Max heap size is 768Mb
+unsigned char *HEAP_END;
+static unsigned char *freeptr;
+static unsigned int bytes_allocated = 0;
 typedef unsigned char uint8_t;
 
 void *micrOS_MemoryMove (void *destinationAddr, const void *sourceAddr, unsigned int length) {
@@ -91,14 +99,12 @@ uint8_t memcmp(void *str1, void *str2, unsigned count){
 }
 
 void mobiledevice_initialize_MMU(){
-    microPrint("[i] MMU Init: Initializing Memory Management Unit (MMU)...");
-    microPrint_NewLine();
+    microPrint("[i] MMU Init: Initializing Memory Management Unit (MMU)...", true);
     
     unsigned long data_page = (unsigned long)&_data/PAGESIZE;
     unsigned long r, b, *paging=(unsigned long*)&_end;
     
-    microPrint("[Memory Management Unit] Info: Page Size is "); microPrint("4096");
-    microPrint_NewLine();
+    microPrint("[Memory Management Unit] Info: Page Size is ", false); microPrint("4096", true);
     
     paging[0]=(unsigned long)((unsigned char*)&_end+2*PAGESIZE) |    // physical address
         PT_PAGE |     // it has the "Present" flag, which must be set, and we have area in it mapped by pages
@@ -163,8 +169,7 @@ void mobiledevice_initialize_MMU(){
     asm volatile ("mrs %0, id_aa64mmfr0_el1" : "=r" (r));
     b=r&0xF;
     if(r&(0xF<<28)/*4k*/ || b<1/*36 bits*/) {
-        microPrint("[Memory Management Unit] FAIL: 4k granule or 36 bit address space not supported.");
-        microPrint_NewLine();
+        microPrint("[Memory Management Unit] FAIL: 4k granule or 36 bit address space not supported.", true);
         return;
     }
 
@@ -190,8 +195,7 @@ void mobiledevice_initialize_MMU(){
     asm volatile ("msr tcr_el1, %0; isb" : : "r" (r));
     asm volatile ("msr ttbr0_el1, %0" : : "r" ((unsigned long)&_end + TTBR_CNP));
     asm volatile ("msr ttbr1_el1, %0" : : "r" ((unsigned long)&_end + TTBR_CNP + PAGESIZE));
-    microPrint("[Memory Management Unit] Info: Enabling Page Translation...");
-    microPrint_NewLine();
+    microPrint("[Memory Management Unit] Info: Enabling Page Translation...", true);
     asm volatile ("dsb ish; isb; mrs %0, sctlr_el1" : "=r" (r));
     r|=0xC00800;     // set mandatory reserved bits
     r&=~((1<<25) |   // clear EE, little endian translation tables
@@ -204,6 +208,34 @@ void mobiledevice_initialize_MMU(){
          (1<<1));    // clear A, no aligment check
     r|=  (1<<0);     // set M, enable MMU
     asm volatile ("msr sctlr_el1, %0; isb" : : "r" (r));
-    microPrint("[Memory Management Unit] MMU initialization complete."); microPrint(PAGESIZE);
-    microPrint_NewLine();
+    microPrint("[Memory Management Unit] MMU initialization complete.", true);
+}
+
+void *malloc(unsigned int size){
+   if (size > 0) {
+      void *allocated = freeptr;
+      if ((long)allocated % 8 != 0) {
+         allocated += 8 - ((long)allocated % 8);
+      }
+    
+      if ((unsigned char *)(allocated + size) > HEAP_END) {
+         return 0;
+      } else {
+         freeptr += size;
+         bytes_allocated += size;
+
+         return allocated;
+      }
+   }
+   return 0;
+}
+
+unsigned char *micrOS_IntitializeHeap(){
+    if ((long)HEAP_START % 8 != 0) {
+        HEAP_START += 8 - ((long)HEAP_START % 8);
+    }
+    
+    HEAP_END = (unsigned char *)(HEAP_START + HEAP_SIZE);
+    freeptr = HEAP_START;
+    return freeptr;
 }

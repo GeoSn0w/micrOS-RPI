@@ -9,9 +9,10 @@
 #include "../coreStorage/coreStorage_types.h"
 #include "coreHRNG.h"
 #include "../coreOS/GPIO/gpio.h"
+#include "../coreOS/Common/coreCommon.h"
 
 char* KERN_VER_STRING = "micrOS Kernel v1.0 ~ Tue June 14 2022 10:22 PDT / root:micrOS-RPI_CoreOS_DEVELOPMENT~arm64";
-
+#define NULL 0
 #define PM_RSTC         ((volatile unsigned int*)(MMIO_BASE+0x0010001c))
 #define PM_RSTS         ((volatile unsigned int*)(MMIO_BASE+0x00100020))
 #define PM_WDOG         ((volatile unsigned int*)(MMIO_BASE+0x00100024))
@@ -20,24 +21,31 @@ char* KERN_VER_STRING = "micrOS Kernel v1.0 ~ Tue June 14 2022 10:22 PDT / root:
 
 int main(){
     initializeFrameBuffer();
-    microPrint("[*] Initializing text mode printer...");
-    microPrint_NewLine();
-    microPrint("[+] Successfully intiliazed!");
-    microPrint_NewLine();
-    presentWorkSpaceWithParameters();
+    microPrint("[*] Initializing text mode printer...", true);
+    microPrint("[+] Successfully intiliazed!", true);
     initializeCoreStorage();
     initializeHardwareRandomNumberGenerator();
     powerOnSelfTest();
     mobiledevice_initialize_MMU();
+    presentWorkSpaceWithParameters();
+    micrOS_IntitializeHeap();
+    
+    int* ptr1;
+        ptr1 = (int*) malloc (3 * sizeof(int));
+
+        if(ptr1==NULL){
+            microPrint("FAILED TO ALLOCATE MEMORY!", true);
+        } else {
+            microPrint("MEMORY ALLOCATED!", true);
+        }
     while (1);
 }
 
 kern_return_t initializeFrameBuffer(){
     if (micrOS_Framebuffer_Init() == 0) {
         micrOS_vanityPrint();
-        microPrint("[*] Initializing FrameBuffer...");
-        microPrint_NewLine();
-        microPrint("[+] FrameBuffer is at Address 0x"); microPrint_Hex(frameBufferAddress);
+        microPrint("[*] Initializing FrameBuffer...", true);
+        microPrint("[+] FrameBuffer is at Address 0x", false); microPrint_Hex(frameBufferAddress);
         microPrint_NewLine();
         return KERN_SUCCESS;
     } else {
@@ -46,43 +54,37 @@ kern_return_t initializeFrameBuffer(){
 }
 
 kern_return_t initializeCoreStorage(){
-    microPrint("[i] Starting coreStorage Service...");
-    microPrint_NewLine();
+    microPrint("[i] Starting coreStorage Service...", true);
     if (coreStorage_initialize(INT_READ_RDY) == coreStorage_SUCCESS) {
-        microPrint("[+] Successfully initialized MicroSD Card!");
-        microPrint_NewLine();
+        microPrint("[+] Successfully initialized MicroSD Card!", true);
     } else if (coreStorage_initialize(INT_READ_RDY) == coreStorage_TIMEOUT){
-        microPrint("[!] Cannot initialize coreStorage Service. MicroSD Card access timeout.");
-        microPrint_NewLine();
+        microPrint("[!] Cannot initialize coreStorage Service. MicroSD Card access timeout.", true);
     } else if (coreStorage_initialize(INT_READ_RDY) == coreStorage_FAILURE){
-        microPrint("[!] Cannot initialize coreStorage Service. MicroSD Card access failed.");
-        microPrint_NewLine();
+        microPrint("[!] Cannot initialize coreStorage Service. MicroSD Card access failed.", true);
     }
     return KERN_SUCCESS;
 }
 
 kern_return_t micrOS_vanityPrint(){
-    microPrint("micrOS v1.0 - Raspbery PI 3");
+    microPrint("micrOS v1.0 - Raspbery PI 3", false);
     microPrint_NewLine(); microPrint_NewLine(); microPrint_NewLine();
-    microPrint(KERN_VER_STRING); microPrint_NewLine();
+    microPrint(KERN_VER_STRING, true);
     return KERN_SUCCESS;
 }
 
 kern_return_t initializeHardwareRandomNumberGenerator(){
-    microPrint("[i] MMIO Base is at: 0x");microPrint_Hex(MMIO_BASE);
+    microPrint("[i] MMIO Base is at: 0x", false);microPrint_Hex(MMIO_BASE);
     microPrint_NewLine();
-    microPrint("[i] Initializing Hardware Random Number Generator Engine...");
-    microPrint_NewLine();
+    microPrint("[i] Initializing Hardware Random Number Generator Engine...", true);
+
     unsigned int testResult = kernRandomize(0,100000);
     if (testResult != 0) {
-        microPrint("[+] Successfully Hardware Random Number Generator Engine.");
-        microPrint_NewLine();
-        microPrint("[+] HRNG Test Result: 0x"); microPrint_Hex(testResult);
+        microPrint("[+] Successfully Hardware Random Number Generator Engine.", true);
+        microPrint("[+] HRNG Test Result: 0x", false); microPrint_Hex(testResult);
         microPrint_NewLine();
         return KERN_SUCCESS;
     } else {
-        microPrint("[!] Hardware Random Number Generator Engine failed to initialize!");
-        microPrint_NewLine();
+        microPrint("[!] Hardware Random Number Generator Engine failed to initialize!", true);
         return KERN_FAILURE;
     }
 }
@@ -159,16 +161,15 @@ kern_return_t powerOnSelfTest(){
     mailbox[7] = MBOX_TAG_LAST;
     
     if (mailbox_call(MBOX_CH_PROP)){
-        microPrint("[i] Board Serial Number is: "); microPrint_Hex(mailbox[6]); microPrint_Hex(mailbox[5]);
+        microPrint("[i] Board Serial Number is: ", false); microPrint_Hex(mailbox[6]); microPrint_Hex(mailbox[5]);
         microPrint_NewLine();
     } else {
-        microPrint("[!] Board Serial Number cannot be determined!");
-        microPrint_NewLine();
+        microPrint("[!] Board Serial Number cannot be determined!", true);
         return KERN_FAILURE;
     }
     
     unsigned long executionLvl = getCurrentExecutionLevel();
-    microPrint("[i] Current Execution Level: EL: "); microPrint_Hex((executionLvl>>2)&3); microPrint_NewLine();
+    microPrint("[i] Current Execution Level: EL: ", false); microPrint_Hex((executionLvl>>2)&3); microPrint_NewLine();
     return KERN_SUCCESS;
 }
 

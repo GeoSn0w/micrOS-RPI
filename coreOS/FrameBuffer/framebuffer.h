@@ -24,10 +24,11 @@
  */
 #ifndef FRAMEBUFFER_H
 #define FRAMEBUFFER_H
+#include "../Common/coreCommon.h"
 
 int micrOS_Framebuffer_Init();
 void micrOS_WriteLine(int x, int y, char *s, unsigned char attr, int zoom);
-void microPrint(char *string);
+void microPrint(char *string, bool newLineRequired);
 void microPrint_NewLine(void);
 void microPrint_Character(unsigned char b);
 void microPrint_Hex(unsigned int d);
@@ -36,4 +37,5 @@ void micrOS_PrintToScreen(int x, int y, char *s);
 void lfb_proprint(int x, int y, char *s);
 void devicePaintPicture(char *picture_data, unsigned int picture_width, unsigned int picture_height);
 extern unsigned char *frameBufferAddress;
+int setDefaultWallpaper(void);
 #endif /* FRAMEBUFFER_H */

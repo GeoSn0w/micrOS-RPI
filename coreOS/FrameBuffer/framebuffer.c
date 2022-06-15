@@ -25,6 +25,8 @@
 #include "framebuffer.h"
 #include "../GPU/mailbox.h"
 #include "textmode.h"
+#include "micrOS_default_wallpaper.h"
+#include "../Common/coreCommon.h"
 
 unsigned int width, height, pitch, RGBMode;
 unsigned char *frameBufferAddress = 0;
@@ -176,7 +178,7 @@ void micrOS_PaintRectangle(int x1, int y1, int x2, int y2, unsigned char attr, i
     }
 }
 
-void microPrint(char *string) {
+void microPrint(char *string, bool newLineRequired) {
     if (current_X + (strlen(string) * 8)  >= 1920) {
        current_X = 0; current_Y += 12;
     }
@@ -185,7 +187,9 @@ void microPrint(char *string) {
     }
     micrOS_WriteLine(current_X, current_Y, string, 0x0f, 1);
     current_X += (strlen(string) * 8);
-
+    if (newLineRequired == true) {
+        microPrint_NewLine();
+    }
 }
 
 void microPrint_NewLine(void) {
@@ -198,9 +202,9 @@ void microPrint_Character(unsigned char b) {
     for(c=4;c>=0;c-=4) {
         n=(b>>c)&0xF;
         n+=n>9?0x37:0x30;
-        microPrint((char *)&n);
+        microPrint((char *)&n, false);
     }
-    microPrint(" ");
+    microPrint(" ", false);
 }
 
 void microPrint_Hex(unsigned int d) {
@@ -209,9 +213,9 @@ void microPrint_Hex(unsigned int d) {
     for(c=28;c>=0;c-=4) {
         n=(d>>c)&0xF;
         n+=n>9?0x37:0x30;
-        microPrint((char *)&n);
+        microPrint((char *)&n, false);
     }
-    microPrint(" ");
+    microPrint(" ", false);
 }
 
 void micrOS_PrintToScreen(int x, int y, char *s){
@@ -274,4 +278,9 @@ void devicePaintPicture(char *picture_data, unsigned int picture_width, unsigned
     }
 #endif
     return;
+}
+
+int setDefaultWallpaper(){
+    devicePaintPicture(micrOS_default_wallpaper_data, wallpaper_width, wallpaper_height);
+    return 0;
 }
