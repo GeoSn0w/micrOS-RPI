@@ -1,4 +1,5 @@
 #include "kernel.h"
+#include "memoryManagement.h"
 #include "../coreOS/FrameBuffer/framebuffer.h"
 #include "../coreOS/WorkSpace/workspace.h"
 #include "kerneltypes.h"
@@ -27,6 +28,7 @@ int main(){
     initializeCoreStorage();
     initializeHardwareRandomNumberGenerator();
     powerOnSelfTest();
+    mobiledevice_initialize_MMU();
     while (1);
 }
 
@@ -165,15 +167,15 @@ kern_return_t powerOnSelfTest(){
         return KERN_FAILURE;
     }
     
-    unsigned long exceptionLvl = getCurrentExceptionLevel();
-    microPrint("[i] Current Exception Level: EL: "); microPrint_Hex((exceptionLvl>>2)&3);
+    unsigned long executionLvl = getCurrentExecutionLevel();
+    microPrint("[i] Current Execution Level: EL: "); microPrint_Hex((executionLvl>>2)&3); microPrint_NewLine();
     return KERN_SUCCESS;
 }
 
-unsigned long getCurrentExceptionLevel(){
-    unsigned long exceptionLevel;
-    asm volatile ("mrs %0, CurrentEL" : "=r" (exceptionLevel));
-    return exceptionLevel;
+unsigned long getCurrentExecutionLevel(){
+    unsigned long executionLevel;
+    asm volatile ("mrs %0, CurrentEL" : "=r" (executionLevel));
+    return executionLevel;
 }
 
 // Boot a completely different kernel at 0x80000. The image can be received over UART if necessary, but we should really implement it as part of the File System.

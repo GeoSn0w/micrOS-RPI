@@ -36,7 +36,7 @@ kern_return_t kRebootDevice(void);
 kern_return_t kShutdownDevice(void);
 kern_return_t corePowerManagement(corePowerManagement_cmd powerAction);
 kern_return_t powerOnSelfTest(void);
-unsigned long getCurrentExceptionLevel(void);
+unsigned long getCurrentExecutionLevel(void);
 kern_return_t bootImageAtAddress(uint8_t address, int bootFlag);
 
 #endif
