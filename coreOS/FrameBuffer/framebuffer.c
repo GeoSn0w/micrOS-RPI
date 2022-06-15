@@ -129,13 +129,13 @@ void drawPixel(int x, int y, unsigned char attr) {
 }
 
 
-void drawChar(unsigned char ch, int x, int y, unsigned char attr, int zoom){
+void drawChar(unsigned char ch, int x, int y, unsigned char attr, unsigned char foregroundColor, int zoom){
     unsigned char *glyph = (unsigned char *)&font + (ch < FONT_NUMGLYPHS ? ch : 0) * FONT_BPG;
 
     for (int i=1;i<=(FONT_HEIGHT*zoom);i++) {
     for (int j=0;j<(FONT_WIDTH*zoom);j++) {
         unsigned char mask = 1 << (j/zoom);
-        unsigned char col = (*glyph & mask) ? attr & 0x0f : (attr & 0xf0) >> 4;
+        unsigned char col = (*glyph & mask) ? attr & 0x0f : (foregroundColor) >> 4;
 
         drawPixel(x+j, y+i, col);
     }
@@ -143,14 +143,14 @@ void drawChar(unsigned char ch, int x, int y, unsigned char attr, int zoom){
     }
 }
 
-void micrOS_WriteLine(int x, int y, char *s, unsigned char attr, int zoom) {
+void micrOS_WriteLine(int x, int y, char *s, unsigned char attr, unsigned char foregroundColor, int zoom) {
     while (*s) {
        if (*s == '\r') {
               x = 0;
            } else if(*s == '\n') {
               x = 0; y += (FONT_HEIGHT*zoom);
            } else {
-          drawChar(*s, x, y, attr, zoom);
+          drawChar(*s, x, y, attr, foregroundColor, zoom);
               x += (FONT_WIDTH*zoom);
            }
         s++;
@@ -185,7 +185,7 @@ void microPrint(char *string, bool newLineRequired) {
     if (current_Y + 12 >= 1080) {
        current_Y = 0;
     }
-    micrOS_WriteLine(current_X, current_Y, string, 0x0f, 1);
+    micrOS_WriteLine(current_X, current_Y, string, 0x0f, 0x00, 1);
     current_X += (strlen(string) * 8);
     if (newLineRequired == true) {
         microPrint_NewLine();

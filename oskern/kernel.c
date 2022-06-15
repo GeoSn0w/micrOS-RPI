@@ -27,7 +27,7 @@ int main(){
     initializeCoreStorage();
     initializeHardwareRandomNumberGenerator();
     powerOnSelfTest();
-    //presentWorkSpaceWithParameters();
+    presentWorkSpaceWithParameters();
     while (1);
 }
 

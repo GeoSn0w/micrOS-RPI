@@ -27,7 +27,7 @@
 #include "../Common/coreCommon.h"
 
 int micrOS_Framebuffer_Init();
-void micrOS_WriteLine(int x, int y, char *s, unsigned char attr, int zoom);
+void micrOS_WriteLine(int x, int y, char *s, unsigned char attr, unsigned char foregroundColor, int zoom);
 void microPrint(char *string, bool newLineRequired);
 void microPrint_NewLine(void);
 void microPrint_Character(unsigned char b);
