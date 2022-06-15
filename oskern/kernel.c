@@ -1,3 +1,4 @@
+#include "kernel.h"
 #include "../coreOS/FrameBuffer/framebuffer.h"
 #include "../coreOS/WorkSpace/workspace.h"
 #include "kerneltypes.h"
@@ -15,16 +16,6 @@ char* KERN_VER_STRING = "micrOS Kernel v1.0 ~ Tue June 14 2022 10:22 PDT / root:
 #define PM_WDOG         ((volatile unsigned int*)(MMIO_BASE+0x00100024))
 #define PM_WDOG_MAGIC   0x5a000000
 #define PM_RSTC_FULLRST 0x00000020
-
-kern_return_t initializeFrameBuffer(void);
-kern_return_t micrOS_vanityPrint(void);
-kern_return_t initializeCoreStorage(void);
-kern_return_t initializeHardwareRandomNumberGenerator(void);
-kern_return_t kRebootDevice(void);
-kern_return_t kShutdownDevice(void);
-kern_return_t corePowerManagement(corePowerManagement_cmd powerAction);
-kern_return_t powerOnSelfTest(void);
-unsigned long getCurrentExceptionLevel(void);
 
 int main(){
     initializeFrameBuffer();
@@ -183,4 +174,16 @@ unsigned long getCurrentExceptionLevel(){
     unsigned long exceptionLevel;
     asm volatile ("mrs %0, CurrentEL" : "=r" (exceptionLevel));
     return exceptionLevel;
+}
+
+// Boot a completely different kernel at 0x80000. The image can be received over UART if necessary, but we should really implement it as part of the File System.
+
+kern_return_t bootImageAtAddress(uint8_t address, int bootFlag){
+    asm volatile (
+            "mov x0, x10;"
+            "mov x1, x11;"
+            "mov x2, x12;"
+            "mov x3, x13;"
+            "mov x30, 0x80000; ret"
+    );
 }
