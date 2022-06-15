@@ -26,7 +26,7 @@
 #define MEMMGMT_H
 
 void *micrOS_MemoryMove (void *destinationAddr, const void *sourceAddr, unsigned int length);
-void mobiledevice_initialize_MMU(void);
+int mobiledevice_initialize_MMU(void);
 unsigned char *micrOS_IntitializeHeap(void);
 void *malloc(unsigned int size);
 #endif

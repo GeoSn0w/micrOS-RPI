@@ -98,7 +98,7 @@ uint8_t memcmp(void *str1, void *str2, unsigned count){
     return 0;
 }
 
-void mobiledevice_initialize_MMU(){
+int mobiledevice_initialize_MMU(){
     microPrint("[i] MMU Init: Initializing Memory Management Unit (MMU)...", true);
     
     unsigned long data_page = (unsigned long)&_data/PAGESIZE;
@@ -170,7 +170,7 @@ void mobiledevice_initialize_MMU(){
     b=r&0xF;
     if(r&(0xF<<28)/*4k*/ || b<1/*36 bits*/) {
         microPrint("[Memory Management Unit] FAIL: 4k granule or 36 bit address space not supported.", true);
-        return;
+        return -1;
     }
 
     r=  (0xFF << 0) |    // AttrIdx=0: normal, IWBWA, OWBWA, NTR
@@ -209,6 +209,7 @@ void mobiledevice_initialize_MMU(){
     r|=  (1<<0);     // set M, enable MMU
     asm volatile ("msr sctlr_el1, %0; isb" : : "r" (r));
     microPrint("[Memory Management Unit] MMU initialization complete.", true);
+    return 0;
 }
 
 void *malloc(unsigned int size){

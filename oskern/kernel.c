@@ -21,24 +21,32 @@ char* KERN_VER_STRING = "micrOS Kernel v1.0 ~ Tue June 14 2022 10:22 PDT / root:
 
 int main(){
     initializeFrameBuffer();
+    initializeMemory();
     microPrint("[*] Initializing text mode printer...", true);
     microPrint("[+] Successfully intiliazed!", true);
     initializeCoreStorage();
     initializeHardwareRandomNumberGenerator();
     powerOnSelfTest();
-    mobiledevice_initialize_MMU();
-    presentWorkSpaceWithParameters();
-    micrOS_IntitializeHeap();
-    
-    int* ptr1;
-        ptr1 = (int*) malloc (3 * sizeof(int));
-
-        if(ptr1==NULL){
-            microPrint("FAILED TO ALLOCATE MEMORY!", true);
-        } else {
-            microPrint("MEMORY ALLOCATED!", true);
-        }
+    //presentWorkSpaceWithParameters();
     while (1);
+}
+
+kern_return_t initializeMemory(){
+    unsigned char *heap_init = micrOS_IntitializeHeap();
+    int mmu_init = mobiledevice_initialize_MMU();
+    
+
+    int* testPointer;
+    testPointer = (int*) malloc (3 * sizeof(int));
+
+    if (testPointer == NULL){
+            microPrint("[!] Failed to allocate test memory region. Heap Failure.", true);
+            microPrint("[!] Failed to successfully initialize memory management modules.", true);
+    } else {
+            microPrint("[+] Successfully allocated test memory region. Heap Success.", true);
+            microPrint("[i] Heap begins at address 0x", false); microPrint_Hex(heap_init); microPrint_NewLine();
+    }
+    return KERN_FAILURE;
 }
 
 kern_return_t initializeFrameBuffer(){

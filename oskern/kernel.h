@@ -25,8 +25,7 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 #include "kerneltypes.h"
-typedef unsigned char                uint8_t;
-typedef unsigned short int        uint16_t;
+#include "../coreOS/Common/coreCommon.h"
 
 kern_return_t initializeFrameBuffer(void);
 kern_return_t micrOS_vanityPrint(void);
@@ -38,5 +37,5 @@ kern_return_t corePowerManagement(corePowerManagement_cmd powerAction);
 kern_return_t powerOnSelfTest(void);
 unsigned long getCurrentExecutionLevel(void);
 kern_return_t bootImageAtAddress(uint8_t address, int bootFlag);
-
+kern_return_t initializeMemory(void);
 #endif
