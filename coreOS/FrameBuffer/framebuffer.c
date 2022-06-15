@@ -70,8 +70,8 @@ int micrOS_Framebuffer_Init() {
     mailbox[2] = 0x48003;  //set phy wh
     mailbox[3] = 8;
     mailbox[4] = 8;
-    mailbox[5] = 1024;         //FrameBufferInfo.width
-    mailbox[6] = 768;          //FrameBufferInfo.height
+    mailbox[5] = 1920;         //FrameBufferInfo.width
+    mailbox[6] = 1080;          //FrameBufferInfo.height
 
     mailbox[7] = 0x48004;  //set virt wh
     mailbox[8] = 8;
