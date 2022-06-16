@@ -15,3 +15,8 @@ kWorkSpaceFunc workspaceWindow_Constructor(int begin_x, int begin_y, int end_x, 
     micrOS_PaintRectangle(begin_x, begin_y, end_x, end_y, windowColor, 1);
     micrOS_WriteLine(begin_x + 5, begin_y + 5, windowTitle, 0x0f, windowColor, 1);
 }
+
+kWorkSpaceFunc workspaceButton_Constructor(int begin_x, int begin_y, int end_x, int end_y, unsigned char buttonColor, char* buttonText){
+    micrOS_PaintRectangle(begin_x, begin_y, end_x, end_y, buttonColor, 1);
+    micrOS_WriteLine(begin_x + 5, begin_y + 5, buttonText, 0x0f, buttonColor, 1);
+}
