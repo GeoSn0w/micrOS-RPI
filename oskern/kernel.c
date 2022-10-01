@@ -11,6 +11,8 @@
 #include "../coreOS/GPIO/gpio.h"
 #include "../coreOS/Common/coreCommon.h"
 
+kern_return_t printversionstring(void);
+
 char* KERN_VER_STRING = "micrOS Kernel v1.0 ~ Tue June 14 2022 10:22 PDT / root:micrOS-RPI_CoreOS_DEVELOPMENT~arm64";
 #define NULL 0
 #define PM_RSTC         ((volatile unsigned int*)(MMIO_BASE+0x0010001c))
@@ -29,6 +31,11 @@ int main(){
     powerOnSelfTest();
     presentWorkSpaceWithParameters();
     while (1);
+}
+
+kern_return_t printversionstring(){
+    microPrint(KERN_VER_STRING, true);
+    return 0x0;
 }
 
 kern_return_t initializeMemory(){
